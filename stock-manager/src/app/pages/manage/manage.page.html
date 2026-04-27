@@ -1,0 +1,198 @@
+<!--
+  ManagePage template - load / update / delete by name.
+  Author: Tianjie Zhou
+-->
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Manage</ion-title>
+    <ion-buttons slot="end">
+      <sm-help-info [text]="helpText" title="Edit / Delete"></sm-help-info>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [ngModel]="lookupName()"
+      (ngModelChange)="lookupName.set($event)"
+      name="targetName"
+      placeholder="Exact name to load..."
+      showClearButton="focus">
+    </ion-searchbar>
+    <ion-buttons slot="end">
+      <ion-button color="primary" fill="solid" (click)="load()" [disabled]="loading()">
+        <ion-icon slot="start" name="cloud-download-outline"></ion-icon>
+        Load
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="ion-text-center ion-padding" *ngIf="loading()">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+  </div>
+
+  <div *ngIf="errorMsg() as msg" class="sm-error-box">
+    <ion-icon name="warning-outline"></ion-icon>
+    {{ msg }}
+  </div>
+
+  <div
+    *ngIf="!current() && !loading() && !errorMsg()"
+    class="ion-text-center ion-padding">
+    <ion-icon name="pencil-outline" size="large" color="medium"></ion-icon>
+    <p>Use the search bar above to load a record by name.</p>
+  </div>
+
+  <form
+    *ngIf="current() as record"
+    #f="ngForm"
+    (ngSubmit)="save(f)"
+    novalidate>
+
+    <div class="loaded-head">
+      <div>
+        <h3>{{ record.name }}</h3>
+        <small>
+          <ion-badge color="primary" *ngIf="record.id !== undefined">
+            #{{ record.id }}
+          </ion-badge>
+          {{ record.category }}
+        </small>
+      </div>
+    </div>
+
+    <ion-list inset="true">
+      <ion-item>
+        <ion-input
+          label="Name (locked)"
+          labelPlacement="stacked"
+          name="lockedName"
+          [value]="record.name"
+          readonly>
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-select
+          label="Category *"
+          labelPlacement="stacked"
+          interface="popover"
+          name="category"
+          required
+          [(ngModel)]="draft.category">
+          <ion-select-option *ngFor="let c of categoryOptions" [value]="c">
+            {{ c }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          label="Quantity *"
+          labelPlacement="stacked"
+          name="quantity"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          required
+          pattern="^\d+$"
+          [(ngModel)]="draft.quantity"
+          #qtyField="ngModel">
+        </ion-input>
+      </ion-item>
+      <ion-note color="danger" class="hint"
+        *ngIf="qtyField.touched && qtyField.invalid">
+        Quantity must be a non-negative whole number.
+      </ion-note>
+
+      <ion-item>
+        <ion-input
+          label="Price *"
+          labelPlacement="stacked"
+          name="price"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          required
+          pattern="^\d+$"
+          [(ngModel)]="draft.price"
+          #priceField="ngModel">
+        </ion-input>
+      </ion-item>
+      <ion-note color="danger" class="hint"
+        *ngIf="priceField.touched && priceField.invalid">
+        Price must be a non-negative whole number.
+      </ion-note>
+
+      <ion-item>
+        <ion-input
+          label="Supplier *"
+          labelPlacement="stacked"
+          name="supplier"
+          type="text"
+          required
+          minlength="2"
+          [(ngModel)]="draft.supplier"
+          #supField="ngModel">
+        </ion-input>
+      </ion-item>
+      <ion-note color="danger" class="hint"
+        *ngIf="supField.touched && supField.invalid">
+        Supplier name is required.
+      </ion-note>
+
+      <ion-item>
+        <ion-select
+          label="Stock state *"
+          labelPlacement="stacked"
+          interface="popover"
+          name="state"
+          required
+          [(ngModel)]="draft.state">
+          <ion-select-option *ngFor="let s of stateOptions" [value]="s">
+            {{ s }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Featured</ion-label>
+        <ion-toggle slot="end" name="featured" [(ngModel)]="draft.featured"></ion-toggle>
+      </ion-item>
+
+      <ion-item>
+        <ion-textarea
+          label="Note (optional)"
+          labelPlacement="stacked"
+          name="note"
+          autoGrow="true"
+          maxlength="500"
+          [(ngModel)]="draft.note">
+        </ion-textarea>
+      </ion-item>
+    </ion-list>
+
+    <div class="action-bar ion-padding">
+      <ion-button
+        expand="block"
+        color="primary"
+        type="submit"
+        [disabled]="saving() || deleting()">
+        <ion-spinner *ngIf="saving()" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!saving()" slot="start" name="checkmark-outline"></ion-icon>
+        {{ saving() ? 'Saving…' : 'Save changes' }}
+      </ion-button>
+
+      <ion-button
+        expand="block"
+        color="danger"
+        type="button"
+        (click)="remove()"
+        [disabled]="saving() || deleting()">
+        <ion-spinner *ngIf="deleting()" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!deleting()" slot="start" name="trash-bin-outline"></ion-icon>
+        {{ deleting() ? 'Deleting…' : 'Delete record' }}
+      </ion-button>
+    </div>
+  </form>
+</ion-content>
