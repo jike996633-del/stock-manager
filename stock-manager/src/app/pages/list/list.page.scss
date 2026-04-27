@@ -1,0 +1,21 @@
+/* ListPage styles - Author: Tianjie Zhou */
+.tile {
+  margin: 0;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(15, 159, 138, 0.08);
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 4px 0;
+    font-size: 13px;
+
+    span { color: var(--ion-color-medium); }
+    b    { color: var(--ion-color-dark, #1e293b); }
+  }
+}
+
+ion-card-subtitle ion-icon {
+  vertical-align: -2px;
+}
