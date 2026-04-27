@@ -1,0 +1,28 @@
+/* ManagePage styles - Author: Tianjie Zhou */
+.loaded-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px 0;
+
+  h3 {
+    margin: 0;
+    font-size: 17px;
+  }
+  small {
+    color: var(--ion-color-medium);
+  }
+}
+
+.action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hint {
+  display: block;
+  padding-top: 4px;
+  padding-left: 16px;
+  font-size: 12px;
+}
