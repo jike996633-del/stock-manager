@@ -1,0 +1,113 @@
+/**
+ * StockService
+ *
+ * Thin async/await wrapper around the remote stock REST endpoint.
+ * The service always returns UI-facing `StockRecord` objects; wire
+ * format conversions happen at the boundary.
+ *
+ * Endpoint shape (base `https://prog2005.it.scu.edu.au/ArtGalley`):
+ *   GET    /             - array of records
+ *   GET    /<name>       - single record matched by name
+ *   POST   /             - create record (server assigns id)
+ *   PUT    /<name>       - update existing record by name
+ *   DELETE /<name>       - delete record (server protects "Laptop")
+ *
+ * Author: Jiutai Yu
+ */
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+
+import {
+  StockRecord,
+  StockDraft,
+  StockApiPayload,
+  fromApi,
+  toApi
+} from '../models/stock-record';
+
+@Injectable({ providedIn: 'root' })
+export class StockService {
+  /** REST base URL. */
+  private readonly endpoint: string =
+    'https://prog2005.it.scu.edu.au/ArtGalley';
+
+  private readonly http = inject(HttpClient);
+
+  /** Fetch every record and map to UI shape. */
+  public async fetchAll(): Promise<StockRecord[]> {
+    try {
+      const raw = await firstValueFrom(
+        this.http.get<StockApiPayload[]>(this.endpoint)
+      );
+      return (raw ?? []).map(fromApi);
+    } catch (error) {
+      throw this.wrap(error, 'Unable to load stock list');
+    }
+  }
+
+  /** Fetch a single record by unique name. */
+  public async findByName(name: string): Promise<StockRecord> {
+    const url = `${this.endpoint}/${encodeURIComponent(name)}`;
+    try {
+      const raw = await firstValueFrom(this.http.get<StockApiPayload>(url));
+      return fromApi(raw);
+    } catch (error) {
+      throw this.wrap(error, `No record named "${name}"`);
+    }
+  }
+
+  /** POST a new record. */
+  public async addRecord(draft: StockDraft): Promise<StockRecord> {
+    try {
+      const raw = await firstValueFrom(
+        this.http.post<StockApiPayload>(this.endpoint, toApi(draft))
+      );
+      return fromApi(raw ?? toApi(draft));
+    } catch (error) {
+      throw this.wrap(error, 'Could not create the record');
+    }
+  }
+
+  /** PUT updates to an existing record identified by current name. */
+  public async updateRecord(
+    originalName: string,
+    draft: StockDraft
+  ): Promise<StockRecord> {
+    const url = `${this.endpoint}/${encodeURIComponent(originalName)}`;
+    try {
+      const raw = await firstValueFrom(
+        this.http.put<StockApiPayload>(url, toApi(draft))
+      );
+      return fromApi(raw ?? toApi(draft));
+    } catch (error) {
+      throw this.wrap(error, `Could not update "${originalName}"`);
+    }
+  }
+
+  /** DELETE a record by name. */
+  public async removeRecord(name: string): Promise<void> {
+    const url = `${this.endpoint}/${encodeURIComponent(name)}`;
+    try {
+      await firstValueFrom(this.http.delete(url));
+    } catch (error) {
+      throw this.wrap(error, `Could not delete "${name}"`);
+    }
+  }
+
+  /** Normalise backend / network errors into Error instances. */
+  private wrap(error: unknown, fallback: string): Error {
+    if (error instanceof HttpErrorResponse) {
+      const detail =
+        typeof error.error === 'string'
+          ? error.error
+          : (error.message || `HTTP ${error.status}`);
+      // eslint-disable-next-line no-console
+      console.error('[StockService]', fallback, detail, error);
+      return new Error(`${fallback}: ${detail}`);
+    }
+    // eslint-disable-next-line no-console
+    console.error('[StockService]', fallback, error);
+    return new Error(fallback);
+  }
+}
