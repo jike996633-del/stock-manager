@@ -1,0 +1,114 @@
+<!--
+  ListPage template - card-tile browse with exact-name fetch.
+  Author: Tianjie Zhou
+-->
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Browse</ion-title>
+    <ion-buttons slot="end">
+      <sm-help-info [text]="helpText" title="Browse stock"></sm-help-info>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event)"
+      name="browseQuery"
+      placeholder="Type to filter or fetch..."
+      debounce="150"
+      showClearButton="focus">
+    </ion-searchbar>
+    <ion-buttons slot="end">
+      <ion-button color="primary" fill="solid" (click)="fetchOne()">
+        <ion-icon slot="start" name="cloud-download-outline"></ion-icon>
+        Fetch
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="onPull($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Spotlight (single fetched record) -->
+  <ion-card *ngIf="spotlight() as record" color="light">
+    <ion-card-header>
+      <ion-card-subtitle>Fetched by name</ion-card-subtitle>
+      <ion-card-title>
+        {{ record.name }}
+        <ion-icon
+          *ngIf="record.featured"
+          color="warning"
+          name="sparkles"
+          aria-label="Featured"
+          style="vertical-align: -3px; margin-left: 4px;">
+        </ion-icon>
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>Category: {{ record.category }} &middot; Supplier: {{ record.supplier }}</p>
+      <p>Qty {{ record.quantity }} &middot; Price {{ record.price }}</p>
+      <p *ngIf="record.note">Note: {{ record.note }}</p>
+      <p>
+        <span [class]="pillClass(record.state)">{{ record.state }}</span>
+      </p>
+      <ion-button size="small" fill="outline" (click)="dismissSpotlight()">
+        <ion-icon slot="start" name="close-outline"></ion-icon>
+        Clear
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Error banner -->
+  <div *ngIf="errorMsg() as msg" class="sm-error-box">
+    <ion-icon name="warning-outline"></ion-icon>
+    {{ msg }}
+    <ion-button
+      fill="clear"
+      size="small"
+      color="danger"
+      (click)="refresh()">
+      <ion-icon slot="start" name="reload-outline"></ion-icon>
+      Retry
+    </ion-button>
+  </div>
+
+  <!-- Loading -->
+  <div class="ion-text-center ion-padding" *ngIf="busy()">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+  </div>
+
+  <!-- Empty -->
+  <div
+    class="ion-text-center ion-padding"
+    *ngIf="!busy() && visible().length === 0 && !errorMsg()">
+    <ion-icon name="cube-outline" size="large" color="medium"></ion-icon>
+    <p>No records match your search yet.</p>
+  </div>
+
+  <!-- Card grid -->
+  <div class="sm-grid" *ngIf="!busy() && visible().length > 0">
+    <ion-card *ngFor="let r of visible()" class="tile">
+      <ion-card-header>
+        <ion-card-subtitle>
+          <ion-icon *ngIf="r.featured" name="sparkles" color="warning"></ion-icon>
+          {{ r.category }}
+        </ion-card-subtitle>
+        <ion-card-title>{{ r.name }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p class="row"><span>Supplier</span><b>{{ r.supplier }}</b></p>
+        <p class="row"><span>Quantity</span><b>{{ r.quantity }}</b></p>
+        <p class="row"><span>Price</span><b>{{ r.price }}</b></p>
+        <p class="row" *ngIf="r.id !== undefined">
+          <span>ID</span><ion-badge color="primary">#{{ r.id }}</ion-badge>
+        </p>
+        <p>
+          <span [class]="pillClass(r.state)">{{ r.state }}</span>
+        </p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
