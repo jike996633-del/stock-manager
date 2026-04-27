@@ -1,0 +1,106 @@
+/**
+ * Domain + wire-format types for a stock record.
+ *
+ * We intentionally keep two shapes:
+ *   - `StockRecord`       : the camelCase shape the UI works with.
+ *   - `StockApiPayload`   : the snake_case shape the REST backend expects.
+ *
+ * Mapping happens in one place (see the helper functions at the bottom)
+ * so the rest of the app never deals with both naming styles.
+ *
+ * Author: Jiutai Yu
+ */
+
+/** Categories supported by the backend enum column. */
+export const STOCK_CATEGORIES = [
+  'Electronics',
+  'Furniture',
+  'Clothing',
+  'Tools',
+  'Miscellaneous'
+] as const;
+export type StockCategory = (typeof STOCK_CATEGORIES)[number];
+
+/** Stock availability states supported by the backend. */
+export const STOCK_STATES = [
+  'In Stock',
+  'Low Stock',
+  'Out of Stock'
+] as const;
+export type StockState = (typeof STOCK_STATES)[number];
+
+/** Wire format as served by the REST endpoint. */
+export interface StockApiPayload {
+  item_id?: number;
+  item_name: string;
+  category: StockCategory;
+  quantity: number;
+  price: number;
+  supplier_name: string;
+  stock_status: StockState;
+  featureditem: number;
+  special_note?: string;
+}
+
+/** UI-facing shape. */
+export interface StockRecord {
+  id?: number;
+  name: string;
+  category: StockCategory;
+  quantity: number;
+  price: number;
+  supplier: string;
+  state: StockState;
+  featured: boolean;
+  note?: string;
+}
+
+/** Drafts used by create / update forms (no id yet, no trim guarantees). */
+export type StockDraft = Omit<StockRecord, 'id'>;
+
+/** Convert a wire-format payload into the UI shape. */
+export function fromApi(raw: StockApiPayload): StockRecord {
+  return {
+    id: raw.item_id,
+    name: raw.item_name,
+    category: raw.category,
+    quantity: Number(raw.quantity),
+    price: Number(raw.price),
+    supplier: raw.supplier_name,
+    state: raw.stock_status,
+    featured: Number(raw.featureditem) > 0,
+    note: raw.special_note
+  };
+}
+
+/** Convert a UI draft into a wire-format payload suitable for POST/PUT. */
+export function toApi(draft: StockDraft): StockApiPayload {
+  const payload: StockApiPayload = {
+    item_name: draft.name.trim(),
+    category: draft.category,
+    quantity: Math.trunc(Number(draft.quantity)),
+    price: Math.trunc(Number(draft.price)),
+    supplier_name: draft.supplier.trim(),
+    stock_status: draft.state,
+    featureditem: draft.featured ? 1 : 0
+  };
+  const trimmedNote = (draft.note ?? '').trim();
+  if (trimmedNote.length > 0) {
+    payload.special_note = trimmedNote;
+  }
+  return payload;
+}
+
+/** Build a blank draft - useful as the initial ngModel target. */
+export function blankDraft(): StockDraft {
+  return {
+    name: '',
+    category: 'Electronics',
+    quantity: 0,
+    price: 0,
+    supplier: '',
+    state: 'In Stock',
+    featured: false,
+    note: ''
+  };
+}
