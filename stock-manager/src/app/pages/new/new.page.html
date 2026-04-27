@@ -1,0 +1,191 @@
+<!--
+  NewPage template - featured carousel + template-driven form.
+  Author: Tianjie Zhou
+-->
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>New record</ion-title>
+    <ion-buttons slot="end">
+      <sm-help-info [text]="helpText" title="Create a record"></sm-help-info>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <!-- Featured carousel -->
+  <section class="featured-section">
+    <header class="featured-head">
+      <ion-icon name="sparkles-outline" color="warning"></ion-icon>
+      <h2>Featured items</h2>
+      <ion-button
+        fill="clear"
+        size="small"
+        (click)="reloadFeatured()"
+        [disabled]="loadingFeatured()">
+        <ion-icon slot="icon-only" name="reload-outline"></ion-icon>
+      </ion-button>
+    </header>
+
+    <div class="ion-text-center ion-padding" *ngIf="loadingFeatured()">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+    </div>
+
+    <div class="carousel" *ngIf="!loadingFeatured()">
+      <ion-card *ngFor="let f of featured()" class="carousel-tile" color="light">
+        <ion-card-header>
+          <ion-card-subtitle>
+            <ion-icon name="sparkles" color="warning"></ion-icon>
+            {{ f.category }}
+          </ion-card-subtitle>
+          <ion-card-title>{{ f.name }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <p>Qty {{ f.quantity }} &middot; {{ f.state }}</p>
+        </ion-card-content>
+      </ion-card>
+      <div class="carousel-empty" *ngIf="featured().length === 0">
+        <ion-icon name="sparkles-outline" color="medium" size="large"></ion-icon>
+        <p>No featured items yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Create form -->
+  <form #f="ngForm" (ngSubmit)="submit(f)" novalidate>
+    <ion-list inset="true">
+      <ion-item>
+        <ion-input
+          label="Name *"
+          labelPlacement="stacked"
+          name="name"
+          type="text"
+          autocapitalize="words"
+          maxlength="80"
+          required
+          minlength="2"
+          [pattern]="namePattern"
+          [(ngModel)]="draft.name"
+          #nameField="ngModel">
+        </ion-input>
+      </ion-item>
+      <ion-note color="danger" class="hint"
+        *ngIf="nameField.touched && nameField.invalid">
+        Must be at least 2 chars and only letters/digits/basic punctuation.
+      </ion-note>
+
+      <ion-item>
+        <ion-select
+          label="Category *"
+          labelPlacement="stacked"
+          interface="popover"
+          name="category"
+          required
+          [(ngModel)]="draft.category">
+          <ion-select-option *ngFor="let c of categoryOptions" [value]="c">
+            {{ c }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-input
+          label="Quantity *"
+          labelPlacement="stacked"
+          name="quantity"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          required
+          pattern="^\d+$"
+          [(ngModel)]="draft.quantity"
+          #qtyField="ngModel">
+        </ion-input>
+      </ion-item>
+      <ion-note color="danger" class="hint"
+        *ngIf="qtyField.touched && qtyField.invalid">
+        Quantity must be a non-negative whole number.
+      </ion-note>
+
+      <ion-item>
+        <ion-input
+          label="Price *"
+          labelPlacement="stacked"
+          name="price"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          required
+          pattern="^\d+$"
+          [(ngModel)]="draft.price"
+          #priceField="ngModel">
+        </ion-input>
+      </ion-item>
+      <ion-note color="danger" class="hint"
+        *ngIf="priceField.touched && priceField.invalid">
+        Price must be a non-negative whole number.
+      </ion-note>
+
+      <ion-item>
+        <ion-input
+          label="Supplier *"
+          labelPlacement="stacked"
+          name="supplier"
+          type="text"
+          maxlength="80"
+          required
+          minlength="2"
+          [(ngModel)]="draft.supplier"
+          #supField="ngModel">
+        </ion-input>
+      </ion-item>
+      <ion-note color="danger" class="hint"
+        *ngIf="supField.touched && supField.invalid">
+        Supplier name is required.
+      </ion-note>
+
+      <ion-item>
+        <ion-select
+          label="Stock state *"
+          labelPlacement="stacked"
+          interface="popover"
+          name="state"
+          required
+          [(ngModel)]="draft.state">
+          <ion-select-option *ngFor="let s of stateOptions" [value]="s">
+            {{ s }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Featured</ion-label>
+        <ion-toggle slot="end" name="featured" [(ngModel)]="draft.featured"></ion-toggle>
+      </ion-item>
+
+      <ion-item>
+        <ion-textarea
+          label="Note (optional)"
+          labelPlacement="stacked"
+          name="note"
+          autoGrow="true"
+          maxlength="500"
+          [(ngModel)]="draft.note">
+        </ion-textarea>
+      </ion-item>
+    </ion-list>
+
+    <div class="ion-padding">
+      <ion-button
+        expand="block"
+        color="primary"
+        type="submit"
+        [disabled]="submitting()">
+        <ion-spinner *ngIf="submitting()" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!submitting()" slot="start" name="add-outline"></ion-icon>
+        {{ submitting() ? 'Creating…' : 'Create record' }}
+      </ion-button>
+    </div>
+  </form>
+
+</ion-content>
