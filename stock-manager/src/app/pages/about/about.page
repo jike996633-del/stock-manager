@@ -1,0 +1,51 @@
+<!--
+  AboutPage template - collapsible privacy / security topics.
+  Author: Tianjie Zhou
+-->
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>About & Privacy</ion-title>
+    <ion-buttons slot="end">
+      <sm-help-info [text]="helpText" title="About this screen"></sm-help-info>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <ion-text color="primary">
+    <h2 class="intro">Stock Manager keeps business inventory data safe.</h2>
+  </ion-text>
+  <p class="lead">
+    The sections below summarise what the app collects, how it
+    protects that information, and what you should do as an
+    operator. Tap any header to expand.
+  </p>
+
+  <ion-accordion-group multiple="true" [value]="['collect']">
+    <ion-accordion *ngFor="let topic of topics" [value]="topic.id">
+      <ion-item slot="header" color="light">
+        <ion-icon slot="start" [name]="topic.icon" color="primary"></ion-icon>
+        <ion-label>{{ topic.title }}</ion-label>
+      </ion-item>
+      <div slot="content" class="panel-body">
+        <ion-list lines="none">
+          <ion-item *ngFor="let bullet of topic.bullets">
+            <ion-icon
+              slot="start"
+              name="checkmark-outline"
+              color="success"
+              size="small">
+            </ion-icon>
+            <ion-label class="ion-text-wrap">{{ bullet }}</ion-label>
+          </ion-item>
+        </ion-list>
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
+
+  <ion-note class="footer-note">
+    Built with Ionic and Angular. Backend endpoint:
+    <code>https://prog2005.it.scu.edu.au/ArtGalley</code>
+  </ion-note>
+</ion-content>
